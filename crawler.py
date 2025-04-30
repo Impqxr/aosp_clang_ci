@@ -1,10 +1,10 @@
-import logging
 import os
 from time import sleep
 
 import requests
-import undetected_chromedriver as uc
 from urllib.parse import urlparse
+
+import undetected_chromedriver as uc
 
 from selenium.webdriver.chromium.options import ChromiumOptions
 from selenium.common.exceptions import NoSuchElementException
@@ -12,28 +12,34 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 
+# NIX
+# import shutil
+# BROWSER_PATH = shutil.which("chromium")
+# DRIVER_PATH = shutil.which("undetected-chromedriver")
+
 TIMEOUT = 5
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-options = ChromiumOptions()
-options.add_argument(
-    "--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36"
-)
-driver = uc.Chrome(
-    headless=True,
-    options=options,
-    use_subprocess=False,
-)
 URL = "https://ci.android.com/builds/branches/aosp-llvm-toolchain/grid?legacy=1"
 
 
 def main():
+    options = ChromiumOptions()
+    options.add_argument(
+        "--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36"
+    )
+    # options.binary_location = BROWSER_PATH
+    driver = uc.Chrome(
+        headless=True,
+        options=options,
+        use_subprocess=False,
+        version_main=135
+        # driver_executable_path=DRIVER_PATH,
+    )
+
     print("Stage 1")
     # Stage 1: Find build
     driver.get(URL)
     grid_page_app = WebDriverWait(driver, TIMEOUT).until(EC.presence_of_element_located((By.TAG_NAME, "grid-page-app"))).shadow_root
+    # not very much i can do there, i guess? we need to wait for several shadow roots to be fully rendered
     sleep(TIMEOUT)
     build_grid = grid_page_app.find_element(By.CSS_SELECTOR, "build-grid").shadow_root
     href = build_grid.find_element(By.CSS_SELECTOR, "a[href*='/llvm_linux/latest']").get_attribute("href")
@@ -56,6 +62,10 @@ def main():
         except NoSuchElementException:
             continue
 
+    if href is None:
+        print("Failed to find prebuilt clang!")
+        exit(1)
+
     print("Stage 3")
     # Stage 3: Download artifact
     driver.get(href)
@@ -67,8 +77,7 @@ def main():
     print(f"We got the URL: {href}")
 
     save_artifact(href)
-
-    # driver.quit()
+    driver.quit()
 
 def save_artifact(url: str):
     print("Saving artifact...")

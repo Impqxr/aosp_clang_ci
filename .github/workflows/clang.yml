@@ -13,8 +13,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Chrome
-        uses: browser-actions/setup-chrome@v1
+      # - name: Setup Chrome
+      #   uses: browser-actions/setup-chrome@v1
+      #   with:
+      #     chrome-version: 134
+      #     install-chromedriver: true
+
+      # - name: Update PATH
+      #   run: |
+      #     for bin in /usr/bin/*chrom*; do
+      #       if [[ -x "$bin" ]]; then
+      #         echo "▶ $bin"
+      #         "$bin" --version
+      #       fi
+      #     done
 
       - name: Run crawler
         run: |
@@ -52,6 +64,9 @@ jobs:
 
       - name: Compare build_id
         run: |
+          if [ ! -s ../build_id ]; then
+            exit 1
+          fi
           echo "Old ID: $(cat build_id) vs New ID: $(cat ../build_id)"
           if cmp --silent build_id ../build_id; then
             echo "Build ID matches. Skipping update."
