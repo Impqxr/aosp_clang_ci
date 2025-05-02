@@ -13,21 +13,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # - name: Setup Chrome
-      #   uses: browser-actions/setup-chrome@v1
-      #   with:
-      #     chrome-version: 134
-      #     install-chromedriver: true
-
-      # - name: Update PATH
-      #   run: |
-      #     for bin in /usr/bin/*chrom*; do
-      #       if [[ -x "$bin" ]]; then
-      #         echo "▶ $bin"
-      #         "$bin" --version
-      #       fi
-      #     done
-
       - name: Run crawler
         run: |
           python3 -m pip install -r requirements.txt
@@ -39,12 +24,12 @@ jobs:
         if: steps.run_crawler.outcome == 'success'
         run: |
           if ls clang-* && [ -f build_id ]; then
-            echo "Clang files and build_id exist."
+            echo "Clang prebuilt and build_id exist."
+            echo "BUILD_ID=$(cat build_id)" >> $GITHUB_ENV
             mv clang-* ../
             mv build_id ../
-            echo "BUILD_ID=$(cat build_id)" >> $GITHUB_ENV
           else
-            echo "Error: Missing clang-* files or build_id file."
+            echo "Error: Missing clang prebuilt or build_id file."
             exit 1
           fi
 
@@ -106,4 +91,14 @@ jobs:
           message: |
             **New Clang ${{ env.BUILD_ID }}**
             URL: https://github.com/${{ github.repository }}/releases/tag/${{ env.BUILD_ID }}
+          format: "markdown"
+
+      - name: Inform about error in Telegram
+        if: failure()
+        uses: appleboy/telegram-action@v0.1.1
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: |
+            "Workflow run **FAILED**: [URL](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
           format: "markdown"
