@@ -31,7 +31,7 @@ def main():
         headless=True,
         options=options,
         use_subprocess=False,
-        # version_main=135
+        version_main=137,
         # driver_executable_path=DRIVER_PATH,
     )
 

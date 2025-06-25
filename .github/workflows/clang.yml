@@ -100,5 +100,5 @@ jobs:
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
           message: |
-            "Workflow run **FAILED**: [URL](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+            Workflow run **FAILED**: [URL](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
           format: "markdown"
